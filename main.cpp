@@ -9,7 +9,9 @@
 #if defined(__cplusplus) && __cplusplus >= 201703L && defined(__has_include)
 #if __has_include(<filesystem>)
 #define GHC_USE_STD_FS
+
 #include <filesystem>
+
 namespace fs = std::filesystem;
 #endif
 #endif
@@ -100,15 +102,7 @@ void findPattern(const std::string& filepath, const std::string_view pattern)
     if (foundMatch)
     {
         std::lock_guard<std::mutex> lock(pushLock);
-        if (numberOfMatchesInFile == 1)
-        {
-            filesWithMatches.emplace_back(filepath + " : " + std::to_string(numberOfMatchesInFile) + " match");
-        }
-        else
-        {
-            filesWithMatches.emplace_back(filepath + " : " + std::to_string(numberOfMatchesInFile) + " matches");
-
-        }
+        filesWithMatches.emplace_back(filepath + " : " + std::to_string(numberOfMatchesInFile) + " match(es)");
     }
 }
 
@@ -158,13 +152,13 @@ int main(int argc, char* argv[])
 
         std::vector<std::future<void>> futures;
         futures.reserve(files.size());
-        for (auto& filepaths : files)
+        for (auto& filepath : files)
         {
-            futures.push_back(std::async(std::launch::async, findPattern, filepaths, pattern));
+            futures.push_back(std::async(std::launch::async, findPattern, filepath, pattern));
         }
 
         //print results
-        std::cout << "\nSearched " << files.size() << " files.\n";
+        std::cout << "\nSearched " << files.size() << " file(s).\n";
 
         if (!filesWithMatches.empty())
         {
@@ -175,16 +169,8 @@ int main(int argc, char* argv[])
                     std::cout << file << '\n';
             }
 
-            if (filesWithMatches.size() == 1)
-            {
-                std::cout << "\nFound " << matches << " matches for \"" << pattern << "\" in " << filesWithMatches.size()
-                          << " file.\n";
-            }
-            else
-            {
-                std::cout << "Found " << matches << " matches for \"" << pattern << "\" in " << filesWithMatches.size()
-                          << " different files.\n";
-            }
+            std::cout << "Found " << matches << " match(es) for \"" << pattern << "\" in " << filesWithMatches.size()
+                      << " different file(s).\n";
         }
         else
         {
@@ -199,7 +185,6 @@ int main(int argc, char* argv[])
         std::cout << "Example 1: /home/user npm\n";
         std::cout << "Example 2: /home/user/downloads flower -f .txt,.md,.csv -n\n\n";
         exit(0);
-
     }
 }
 
